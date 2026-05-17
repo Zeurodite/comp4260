@@ -11,20 +11,6 @@ def get_conn():
     password = os.getenv("SQL_PASSWORD")
     return pymssql.connect(server=server, user=username, password=password, database=database)
 
-def init_db():
-    conn = get_conn()
-    cursor = conn.cursor()
-    cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='tasks' AND xtype='U')
-        CREATE TABLE tasks (
-            id INT PRIMARY KEY IDENTITY(1,1),
-            title NVARCHAR(100),
-            done BIT
-        )
-    """)
-    conn.commit()
-    conn.close()
-
 @app.route("/")
 def index():
     conn = get_conn()
@@ -40,7 +26,7 @@ def add_task():
     if title:
         conn = get_conn()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO tasks (title, done) VALUES (?, ?)", (title, 0))
+        cursor.execute("INSERT INTO tasks (title, done) VALUES (%s, %s)", (title, 0))
         conn.commit()
         conn.close()
     return redirect("/")
@@ -49,7 +35,7 @@ def add_task():
 def mark_done(task_id):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("UPDATE tasks SET done = 1 WHERE id = ?", (task_id,))
+    cursor.execute("UPDATE tasks SET done = 1 WHERE id = %s", (task_id,))
     conn.commit()
     conn.close()
     return redirect("/")
@@ -58,11 +44,10 @@ def mark_done(task_id):
 def delete_task(task_id):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    cursor.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
     conn.commit()
     conn.close()
     return redirect("/")
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
