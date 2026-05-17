@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect
-import pyodbc
+import pymssql
 import os
 
 app = Flask(__name__)
@@ -9,9 +9,7 @@ def get_conn():
     database = os.getenv("SQL_DATABASE")
     username = os.getenv("SQL_USERNAME")
     password = os.getenv("SQL_PASSWORD")
-    driver = "{ODBC Driver 17 for SQL Server}"
-    connection_string = f"DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}"
-    return pyodbc.connect(connection_string)
+    return pymssql.connect(server=server, user=username, password=password, database=database)
 
 def init_db():
     conn = get_conn()
